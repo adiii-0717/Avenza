@@ -9,6 +9,10 @@ DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.onrender.com",
+]
+
 INSTALLED_APPS = [
     'daphne',
     'chat',
