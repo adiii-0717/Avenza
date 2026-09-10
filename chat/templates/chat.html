@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenza | Messenger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:          #dde8f5;
+            --bg2:         #e8f0fa;
+            --card:        rgba(255,255,255,0.72);
+            --card-border: rgba(255,255,255,0.95);
+            --sidebar-bg:  rgba(255,255,255,0.55);
+            --text:        #2c3a52;
+            --text-dim:    #8a9bba;
+            --text-muted:  #b8c8df;
+            --accent:      #4a9fff;
+            --accent-dark: #2e7de0;
+            --accent-glow: rgba(74,159,255,0.28);
+            --bubble-sent: linear-gradient(135deg, #4a9fff 0%, #2e7de0 100%);
+            --bubble-recv: rgba(255,255,255,0.88);
+            --shadow-sm:   0 2px 12px rgba(100,140,200,0.12);
+            --shadow-md:   0 8px 32px rgba(80,120,200,0.16);
+            --shadow-lg:   0 20px 60px rgba(60,100,180,0.18);
+            --shadow-card: 0 4px 24px rgba(80,120,200,0.14), 0 1px 4px rgba(80,120,200,0.08);
+            --neu-out:     8px 8px 20px rgba(80,120,200,0.15), -4px -4px 14px rgba(255,255,255,0.9);
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 60% at 10% 20%, rgba(200,225,255,0.55) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 70% at 90% 80%, rgba(180,215,255,0.4) 0%, transparent 60%),
+                radial-gradient(ellipse 80% 40% at 50% 50%, rgba(225,238,255,0.3) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===================== SIDEBAR ===================== */
+        .sidebar {
+            width: 300px;
+            min-width: 300px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-right: 1px solid rgba(255,255,255,0.8);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+            box-shadow: 2px 0 20px rgba(80,120,200,0.08);
+            animation: slideLeft 0.5s cubic-bezier(0.22,1,0.36,1) both;
+        }
+
+        @keyframes slideLeft {
+            from { opacity: 0; transform: translateX(-18px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .brand-header { padding: 30px 26px 20px; border-bottom: 1px solid rgba(255,255,255,0.6); }
+        .brand-row { display: flex; align-items: center; justify-content: space-between; }
+        .brand-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); }
+        .brand-name span { color: var(--accent); }
+
+        .new-chat-btn {
+            width: 34px; height: 34px; border-radius: 11px;
+            background: var(--accent); border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 14px var(--accent-glow);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .new-chat-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(74,159,255,0.4); }
+
+        .brand-sub { font-size: 10.5px; color: var(--text-muted); font-weight: 500; letter-spacing: 0.5px; margin-top: 3px; }
+
+        .search-area { padding: 16px 18px 8px; }
+        .search-box {
+            background: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.9);
+            border-radius: 14px; padding: 10px 15px;
+            display: flex; align-items: center; gap: 9px;
+            box-shadow: var(--shadow-sm), inset 0 1px 3px rgba(255,255,255,0.8); transition: all 0.2s;
+        }
+        .search-box:focus-within { border-color: rgba(74,159,255,0.5); box-shadow: 0 0 0 4px rgba(74,159,255,0.1), var(--shadow-sm); }
+        .search-box input { background: none; border: none; color: var(--text); outline: none; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; width: 100%; font-weight: 500; }
+        .search-box input::placeholder { color: var(--text-muted); font-weight: 400; }
+
+        .section-label { padding: 14px 24px 6px; font-size: 9.5px; font-weight: 700; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
+
+        .user-list { flex: 1; overflow-y: auto; padding: 4px 12px; scrollbar-width: none; }
+        .user-list::-webkit-scrollbar { display: none; }
+
+        .user-card {
+            display: flex; align-items: center; padding: 10px 12px;
+            border-radius: 16px; text-decoration: none; color: var(--text-dim);
+            transition: all 0.2s; margin-bottom: 3px; gap: 12px;
+            animation: fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        .user-card:nth-child(1){animation-delay:0.05s} .user-card:nth-child(2){animation-delay:0.10s}
+        .user-card:nth-child(3){animation-delay:0.15s} .user-card:nth-child(4){animation-delay:0.20s}
+        .user-card:nth-child(5){animation-delay:0.25s}
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .user-card:hover { background: rgba(255,255,255,0.65); color: var(--text); box-shadow: var(--shadow-sm); }
+        .user-card.active { background: rgba(255,255,255,0.85); color: var(--text); box-shadow: var(--shadow-card); }
+
+        .avatar-wrap { position: relative; flex-shrink: 0; }
+        .avatar {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: linear-gradient(135deg, #c5daf7, #a8c8f0);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 17px; color: var(--accent-dark);
+            border: 2.5px solid rgba(255,255,255,0.9);
+            box-shadow: 0 2px 10px rgba(74,159,255,0.2); transition: all 0.2s; overflow: hidden;
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .active .avatar { background: var(--bubble-sent); color: #fff; border-color: rgba(255,255,255,0.95); box-shadow: 0 4px 16px var(--accent-glow); }
+
+        .online-dot {
+            position: absolute; bottom: 1px; right: 1px;
+            width: 10px; height: 10px; background: #3ddb87; border-radius: 50%;
+            border: 2px solid white; box-shadow: 0 0 0 1px rgba(61,219,135,0.4);
+            animation: pulseGreen 2.5s ease-in-out infinite;
+        }
+        @keyframes pulseGreen { 0%,100% { box-shadow: 0 0 0 1px rgba(61,219,135,0.3); } 50% { box-shadow: 0 0 0 3px rgba(61,219,135,0.15); } }
+
+        .user-info { flex: 1; min-width: 0; }
+        .uname { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+        .user-status-txt { font-size: 11px; color: var(--text-muted); margin-top: 1px; font-weight: 400; }
+        .active .user-status-txt { color: #3ddb87; font-weight: 500; }
+
+        .sidebar-footer { padding: 14px 16px; border-top: 1px solid rgba(255,255,255,0.6); }
+
+        .my-profile {
+            display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+            background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.85);
+            border-radius: 16px; box-shadow: var(--shadow-sm); margin-bottom: 10px;
+            cursor: pointer; transition: all 0.2s; position: relative;
+        }
+        .my-profile:hover { background: rgba(255,255,255,0.85); box-shadow: var(--shadow-card); }
+        .my-profile:hover .edit-profile-hint { opacity: 1; }
+
+        .edit-profile-hint {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            opacity: 0; transition: opacity 0.2s; display: flex; align-items: center; gap: 4px;
+            font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 0.3px;
+        }
+
+        .my-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--bubble-sent);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: 700; color: #fff;
+            border: 2px solid rgba(255,255,255,0.9);
+            box-shadow: 0 2px 10px var(--accent-glow); flex-shrink: 0; overflow: hidden;
+        }
+        .my-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+        .my-info { flex: 1; min-width: 0; }
+        .my-name { font-size: 12.5px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .my-role { font-size: 10px; color: var(--text-muted); font-weight: 500; }
+
+        .logout-btn {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; padding: 11px; background: rgba(255,255,255,0.6);
+            border: 1.5px solid rgba(220,100,100,0.2); color: rgba(200,70,70,0.75);
+            border-radius: 13px; cursor: pointer; text-decoration: none;
+            font-size: 12px; font-weight: 700; letter-spacing: 0.5px; transition: all 0.2s;
+            font-family: 'Plus Jakarta Sans', sans-serif; box-shadow: var(--shadow-sm);
+        }
+        .logout-btn:hover { background: rgba(255,90,90,0.08); border-color: rgba(220,70,70,0.4); color: #d94040; }
+
+        /* ===================== CHAT VIEW ===================== */
+        .chat-view { flex: 1; display: flex; flex-direction: column; position: relative; z-index: 5; animation: fadeIn 0.5s ease both 0.1s; overflow: hidden; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .chat-header {
+            padding: 18px 36px; border-bottom: 1px solid rgba(255,255,255,0.6);
+            display: flex; align-items: center; gap: 15px;
+            backdrop-filter: blur(20px); background: rgba(230,240,255,0.6);
+            position: relative; z-index: 20;
+        }
+        .chat-header-avatar {
+            width: 46px; height: 46px; border-radius: 50%;
+            background: var(--bubble-sent);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 19px; font-weight: 700; color: #fff;
+            border: 3px solid rgba(255,255,255,0.95);
+            box-shadow: 0 4px 18px var(--accent-glow); position: relative; flex-shrink: 0; overflow: hidden;
+        }
+        .chat-header-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .chat-header-avatar .online-dot { border-color: rgba(230,240,255,0.9); }
+
+        .chat-header-info { flex: 1; }
+        .chat-header h2 { font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: -0.2px; }
+        .chat-header-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; font-weight: 500; }
+
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); display: inline-block; transition: all 0.3s; }
+        .status-dot.connected { background: #3ddb87; box-shadow: 0 0 6px rgba(61,219,135,0.5); }
+        .status-dot.error     { background: #e05555; box-shadow: 0 0 6px rgba(224,85,85,0.5); }
+
+        #messages { flex: 1; overflow-y: auto; padding: 32px 40px; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none; }
+        #messages::-webkit-scrollbar { display: none; }
+
+        .date-divider { display: flex; align-items: center; gap: 12px; margin: 10px 0 14px; }
+        .date-divider::before, .date-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgba(180,200,230,0.4), transparent); }
+        .date-divider span { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); background: rgba(255,255,255,0.5); padding: 3px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.7); }
+
+        .msg-row { display: flex; width: 100%; align-items: flex-end; gap: 10px; animation: bubbleIn 0.3s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes bubbleIn { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .msg-row.sent     { justify-content: flex-end; }
+        .msg-row.received { justify-content: flex-start; }
+
+        .msg-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #c5daf7, #a8c8f0);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; color: var(--accent-dark);
+            border: 2.5px solid rgba(255,255,255,0.95);
+            box-shadow: 0 4px 14px rgba(74,159,255,0.25); flex-shrink: 0; margin-bottom: 4px; overflow: hidden;
+        }
+        .msg-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .sent .msg-avatar { background: var(--bubble-sent); color: #fff; box-shadow: 0 4px 14px var(--accent-glow); }
+
+        .bubble-group { display: flex; flex-direction: column; gap: 3px; max-width: 58%; }
+        .msg-row.sent .bubble-group     { align-items: flex-end; }
+        .msg-row.received .bubble-group { align-items: flex-start; }
+
+        .sender-name { font-size: 11px; font-weight: 700; color: var(--text-dim); padding: 0 6px; letter-spacing: 0.2px; }
+
+        .bubble { padding: 13px 18px; font-size: 13.5px; line-height: 1.55; font-weight: 500; word-break: break-word; transition: transform 0.15s; }
+        .bubble:hover { transform: scale(1.015); }
+        .received .bubble { background: var(--bubble-recv); color: var(--text); border-radius: 20px 20px 20px 6px; border: 1.5px solid rgba(255,255,255,0.95); box-shadow: 0 4px 20px rgba(80,130,210,0.12), 0 1px 4px rgba(80,130,210,0.08); }
+        .sent .bubble { background: var(--bubble-sent); color: #fff; border-radius: 20px 20px 6px 20px; box-shadow: 0 6px 24px rgba(74,159,255,0.35), 0 2px 8px rgba(46,125,224,0.25); }
+
+        .meta { font-size: 10px; color: var(--text-muted); font-weight: 500; padding: 0 6px; display: block; margin-top: 2px; }
+        .sent .meta { text-align: right; }
+
+        #typing-indicator { min-height: 32px; display: flex; align-items: center; }
+        .typing-bubble { background: var(--bubble-recv); border: 1.5px solid rgba(255,255,255,0.95); border-radius: 20px 20px 20px 6px; padding: 13px 18px; display: none; align-items: center; gap: 5px; box-shadow: 0 4px 16px rgba(80,130,210,0.1); }
+        .typing-bubble.visible { display: flex; }
+        .typing-dot { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; animation: typingBounce 1.2s ease-in-out infinite; }
+        .typing-dot:nth-child(2){animation-delay:0.2s} .typing-dot:nth-child(3){animation-delay:0.4s}
+        @keyframes typingBounce { 0%,60%,100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-5px); opacity: 1; } }
+
+        /* ===================== INPUT BAR ===================== */
+        .input-bar { padding: 16px 36px 22px; backdrop-filter: blur(20px); background: rgba(220,235,255,0.5); border-top: 1px solid rgba(255,255,255,0.65); }
+        .input-wrapper { background: rgba(255,255,255,0.8); border: 1.5px solid rgba(255,255,255,0.95); border-radius: 18px; padding: 8px 8px 8px 18px; display: flex; align-items: center; gap: 10px; box-shadow: var(--neu-out); transition: all 0.25s; }
+        .input-wrapper:focus-within { border-color: rgba(74,159,255,0.45); box-shadow: 0 0 0 4px rgba(74,159,255,0.1), var(--shadow-md); }
+        .attach-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; transition: color 0.2s; padding: 4px; }
+        .attach-btn:hover { color: var(--accent); }
+        .input-wrapper input { flex: 1; background: none; border: none; color: var(--text); outline: none; font-size: 13.5px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500; padding: 10px 0; }
+        .input-wrapper input::placeholder { color: var(--text-muted); font-weight: 400; }
+        .send-btn { background: var(--bubble-sent); border: none; height: 46px; padding: 0 22px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.2s; box-shadow: 0 4px 18px var(--accent-glow); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.2px; flex-shrink: 0; }
+        .send-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(74,159,255,0.45); }
+        .send-btn:active { transform: scale(0.96) translateY(0); }
+        .send-btn svg { fill: #fff; width: 16px; }
+
+        /* ===================== EMPTY STATE ===================== */
+        .empty-state { margin: auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; animation: fadeIn 0.7s ease both 0.3s; }
+        .empty-logo-ring { width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.7); border: 2px solid rgba(255,255,255,0.95); box-shadow: var(--neu-out); display: flex; align-items: center; justify-content: center; font-size: 36px; color: var(--accent); animation: floatEmpty 3s ease-in-out infinite; }
+        @keyframes floatEmpty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .empty-title { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.4px; }
+        .empty-sub   { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        .empty-hint { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-dim); font-weight: 500; background: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.9); border-radius: 20px; padding: 10px 20px; box-shadow: var(--shadow-sm); margin-top: 4px; }
+
+        /* ===================== TOAST ===================== */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: rgba(255,255,255,0.88); backdrop-filter: blur(16px); border: 1.5px solid rgba(255,255,255,0.95); border-left: 3px solid var(--accent); border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; min-width: 260px; animation: toastIn 0.35s cubic-bezier(0.22,1,0.36,1) both; box-shadow: var(--shadow-md); }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(24px) scale(0.96); } to { opacity: 1; transform: translateX(0) scale(1); } }
+        .toast-ico { width: 32px; height: 32px; border-radius: 10px; background: var(--bubble-sent); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px var(--accent-glow); flex-shrink: 0; }
+        .toast-title { font-weight: 700; font-size: 12.5px; color: var(--text); }
+        .toast-body  { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
+
+        /* ===================== PROFILE MODAL ===================== */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(44,58,82,0.38); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal { background: rgba(255,255,255,0.92); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); border: 1.5px solid rgba(255,255,255,0.98); border-radius: 28px; width: 380px; box-shadow: 0 24px 72px rgba(60,100,180,0.22), 0 4px 24px rgba(80,120,200,0.14); transform: scale(0.94) translateY(12px); transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.25s; opacity: 0; overflow: hidden; }
+        .modal-overlay.open .modal { transform: scale(1) translateY(0); opacity: 1; }
+
+        .modal-header { padding: 24px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+        .modal-title  { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+        .modal-close  { width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(180,200,230,0.18); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; color: var(--text-dim); }
+        .modal-close:hover { background: rgba(180,200,230,0.36); color: var(--text); }
+
+        .photo-section { padding: 28px 24px 20px; display: flex; flex-direction: column; align-items: center; gap: 16px; border-bottom: 1px solid rgba(180,200,230,0.2); }
+        .photo-ring { position: relative; width: 96px; height: 96px; }
+        .photo-preview { width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(135deg, #4a9fff 0%, #2e7de0 100%); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; border: 3px solid rgba(255,255,255,0.95); box-shadow: 0 6px 28px var(--accent-glow); overflow: hidden; transition: all 0.2s; }
+        .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-edit-badge { position: absolute; bottom: 2px; right: 2px; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); border: 2.5px solid rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px var(--accent-glow); transition: transform 0.15s; }
+        .photo-edit-badge:hover { transform: scale(1.12); }
+        .photo-actions { display: flex; gap: 10px; }
+        .photo-action-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 22px; font-size: 12px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: all 0.18s; letter-spacing: 0.2px; border: none; }
+        .photo-action-btn.upload { background: rgba(74,159,255,0.12); color: var(--accent-dark); border: 1.5px solid rgba(74,159,255,0.25); }
+        .photo-action-btn.upload:hover { background: rgba(74,159,255,0.2); border-color: rgba(74,159,255,0.4); }
+        .photo-action-btn.remove { background: rgba(220,80,80,0.08); color: #c0403c; border: 1.5px solid rgba(220,80,80,0.18); }
+        .photo-action-btn.remove:hover { background: rgba(220,80,80,0.15); border-color: rgba(220,80,80,0.35); }
+        .photo-action-btn.remove:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .name-section { padding: 20px 24px 24px; }
+        .field-label { font-size: 10px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; display: block; }
+        .field-row { margin-bottom: 16px; }
+        .modal-input { width: 100%; background: rgba(255,255,255,0.75); border: 1.5px solid rgba(180,200,230,0.35); border-radius: 14px; padding: 12px 16px; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: var(--text); outline: none; transition: all 0.2s; box-shadow: inset 0 1px 3px rgba(180,200,230,0.15); }
+        .modal-input:focus { border-color: rgba(74,159,255,0.5); box-shadow: 0 0 0 4px rgba(74,159,255,0.1), inset 0 1px 3px rgba(180,200,230,0.1); background: rgba(255,255,255,0.95); }
+        .modal-input:disabled { background: rgba(220,230,245,0.4); color: var(--text-muted); cursor: not-allowed; border-color: rgba(180,200,230,0.2); }
+        .field-hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; font-weight: 500; }
+
+        .modal-footer { display: flex; gap: 10px; padding-top: 4px; }
+        .btn-cancel { flex: 1; padding: 12px; border-radius: 14px; border: 1.5px solid rgba(180,200,230,0.35); background: rgba(255,255,255,0.6); color: var(--text-dim); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.18s; }
+        .btn-cancel:hover { background: rgba(255,255,255,0.9); color: var(--text); }
+        .btn-save { flex: 2; padding: 12px; border-radius: 14px; border: none; background: var(--bubble-sent); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.18s; box-shadow: 0 4px 18px var(--accent-glow); letter-spacing: 0.2px; }
+        .btn-save:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(74,159,255,0.4); }
+        .btn-save:active { transform: scale(0.97); }
+        .btn-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        #photoInput { display: none; }
+        .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
+</head>
+
+<body>
+
+{% csrf_token %}
+
+<!-- 🔍 NEW CHAT MODAL -->
+<div id="userSearchModal" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    z-index:999;
+">
+    <div style="
+        width:360px;
+        margin:120px auto;
+        background:#1a1a28;
+        padding:20px;
+        border-radius:16px;
+    ">
+        <input type="text" id="searchUserInput"
+            placeholder="Search username..."
+            style="width:100%; padding:10px; margin-bottom:10px;">
+
+        <div id="searchResults"></div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===================== PROFILE EDIT MODAL ===================== -->
+<div class="modal-overlay" id="profileModal" onclick="handleOverlayClick(event)">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Edit Profile</span>
+            <button class="modal-close" onclick="closeProfileModal()">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="photo-section">
+            <div class="photo-ring">
+                <div class="photo-preview" id="modalPhotoPreview">
+                    {% if request.user.profile.profile_photo %}
+                        <img src="{{ request.user.profile.profile_photo.url }}" alt="Profile photo">
+                    {% else %}
+                        <span>{{ request.user.username|first|upper }}</span>
+                    {% endif %}
+                </div>
+                <div class="photo-edit-badge" onclick="document.getElementById('photoInput').click()">
+                    <svg width="12" height="12" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 2.5a1.5 1.5 0 0 1 0 2.12L4.5 11.1 2 11.5l.4-2.5 6.48-6.5A1.5 1.5 0 0 1 11 2.5z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="photo-actions">
+                <button class="photo-action-btn upload" onclick="document.getElementById('photoInput').click()">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Upload Photo
+                </button>
+                <button class="photo-action-btn remove" id="removePhotoBtn" onclick="removePhoto()"
+                    {% if not request.user.profile.profile_photo %}disabled{% endif %}>
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14H6L5 6"/>
+                        <path d="M10 11v6"/><path d="M14 11v6"/>
+                    </svg>
+                    Remove
+                </button>
+            </div>
+            <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoSelect(event)">
+        </div>
+
+        <div class="name-section">
+            <div class="field-row">
+                <label class="field-label" for="displayNameInput">Display Name</label>
+                <input class="modal-input" type="text" id="displayNameInput"
+                    placeholder="Enter your display name"
+                    maxlength="40"
+                    value="{{ request.user.profile.display_name }}">
+                <p class="field-hint">This is how others will see you in chat.</p>
+            </div>
+            <div class="field-row">
+                <label class="field-label">Username</label>
+                <input class="modal-input" type="text" value="{{ request.user.username }}" disabled>
+                <p class="field-hint">Username is permanent and cannot be changed.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeProfileModal()">Cancel</button>
+                <button class="btn-save" id="saveBtn" onclick="saveProfile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== SIDEBAR ===================== -->
+<div class="sidebar">
+    <div class="brand-header">
+        <div class="brand-row">
+            <h1 class="brand-name">Aven<span>za</span></h1>
+            <button class="new-chat-btn" onclick="openUserSearch()" title="New Chat">
+                <svg width="16" height="16" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
+                </svg>
+            </button>
+        </div>
+        <p class="brand-sub">Your private messenger</p>
+    </div>
+
+    <div class="search-area">
+        <div class="search-box">
+            <svg width="13" height="13" fill="none" stroke="#b8c8df" stroke-width="2.5"><circle cx="6" cy="6" r="5"/><path d="m11 11-3-3"/></svg>
+            <input type="text" id="userSearch" placeholder="Search contacts…" onkeyup="filterUsers()">
+        </div>
+    </div>
+
+    <p class="section-label">Messages</p>
+
+    <div class="user-list" id="userList">
+        {% for user in users %}
+        <a href="/chat/{{ user.username }}/" class="user-card {% if chat_user.username == user.username %}active{% endif %}"
+           data-username="{{ user.username }}">
+            <div class="avatar-wrap">
+                <div class="avatar">
+                    {% if user.profile.profile_photo %}
+                        <img src="{{ user.profile.profile_photo.url }}" alt="{{ user.username }}">
+                    {% else %}
+                        {{ user.username|first|upper }}
+                    {% endif %}
+                </div>
+                <div class="online-dot"></div>
+            </div>
+            <div class="user-info">
+                <p class="uname">{{ user.profile.get_display_name }}</p>
+                <p class="user-status-txt">
+                    {% if chat_user.username == user.username %}● Active now{% else %}Tap to chat{% endif %}
+                </p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="my-profile" onclick="openProfileModal()" title="Edit Profile">
+            <div class="my-avatar" id="sidebarAvatar">
+                {% if request.user.profile.profile_photo %}
+                    <img src="{{ request.user.profile.profile_photo.url }}" alt="My photo">
+                {% else %}
+                    <span>{{ request.user.username|first|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="my-info">
+                <p class="my-name" id="sidebarDisplayName">{{ request.user.profile.get_display_name }}</p>
+                <p class="my-role">My Account</p>
+            </div>
+            <span class="edit-profile-hint">
+                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 1a1.5 1.5 0 0 1 0 2.12L3.5 8.6 2 9l.4-2L8 1A1.5 1.5 0 0 1 9 1z"/>
+                </svg>
+                Edit
+            </span>
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Sign Out
+        </a>
+    </div>
+</div>
+
+<!-- ===================== CHAT VIEW ===================== -->
+<div class="chat-view">
+    {% if chat_user %}
+
+    <div class="chat-header">
+        <div class="chat-header-avatar" id="chatHeaderAvatar">
+            {% if chat_user.profile.profile_photo %}
+                <img src="{{ chat_user.profile.profile_photo.url }}" alt="{{ chat_user.username }}">
+            {% else %}
+                {{ chat_user.username|first|upper }}
+            {% endif %}
+            <div class="online-dot"></div>
+        </div>
+        <div class="chat-header-info">
+            <h2 id="chatHeaderName">{{ chat_user.profile.get_display_name }}</h2>
+            <div class="chat-header-sub">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Connecting…</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="messages">
+        <div class="date-divider"><span>Today</span></div>
+
+        <div id="typing-indicator">
+            <div class="typing-bubble" id="typingBubble">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        {% for msg in messages %}
+        <div class="msg-row {% if msg.sender == request.user %}sent{% else %}received{% endif %}"
+             data-sender="{{ msg.sender.username }}">
+            {% if msg.sender != request.user %}
+            <div class="msg-avatar">
+                {% if msg.sender.profile.profile_photo %}
+                    <img src="{{ msg.sender.profile.profile_photo.url }}" alt="{{ msg.sender.username }}">
+                {% else %}
+                    {{ msg.sender.username|first|upper }}
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="bubble-group">
+                <span class="sender-name">
+                    {% if msg.sender == request.user %}You{% else %}{{ msg.sender.profile.get_display_name }}{% endif %}
+                </span>
+                <div class="bubble">{{ msg.message }}</div>
+                <span class="meta">{{ msg.timestamp|time:"H:i" }}</span>
+            </div>
+            {% if msg.sender == request.user %}
+            <div class="msg-avatar">
+                {% if request.user.profile.profile_photo %}
+                    <img src="{{ request.user.profile.profile_photo.url }}" alt="You">
+                {% else %}
+                    {{ request.user.username|first|upper }}
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="input-bar">
+        <form id="chat-form" class="input-wrapper">
+            <button type="button" class="attach-btn" title="Attach file">
+                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                </svg>
+            </button>
+            <input type="text" id="chat-input" placeholder="Message…" autocomplete="off">
+            <button type="submit" class="send-btn">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                Send
+            </button>
+        </form>
+    </div>
+
+    {% else %}
+
+    <div class="empty-state">
+        <div class="empty-logo-ring">
+            <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+        </div>
+        <h2 class="empty-title">Avenza Messenger</h2>
+        <p class="empty-sub">Private, fast & beautiful conversations</p>
+        <div class="empty-hint">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Select a contact from the left to begin
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+
+<script>
+/* ===================== HELPERS ===================== */
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+function escapeHTML(s) {
+    return s.replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+function showToast(title, body, success = false) {
+    const tc = document.getElementById('toastContainer');
+    const t  = document.createElement('div');
+    t.className = 'toast';
+    if (success) t.style.borderLeftColor = '#3ddb87';
+    t.innerHTML = `
+        <div class="toast-ico" style="${success ? 'background:linear-gradient(135deg,#3ddb87,#2ab870)' : ''}">
+            <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2">
+                ${success ? '<polyline points="4 7 7 10 12 4"/>'
+                          : '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'}
+            </svg>
+        </div>
+        <div><div class="toast-title">${title}</div><div class="toast-body">${body}</div></div>`;
+    tc.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); }, 3500);
+}
+
+/* ===================== CHAT SCROLL ===================== */
+const box = document.getElementById('messages');
+const scrollToBottom = () => { if (box) box.scrollTop = box.scrollHeight; };
+scrollToBottom();
+
+function filterUsers() {
+    const q = document.getElementById('userSearch').value.toLowerCase();
+    document.querySelectorAll('.user-card').forEach(c => {
+        c.style.display = c.querySelector('.uname')?.innerText.toLowerCase().includes(q) ? 'flex' : 'none';
+    });
+}
+
+/* ===================== PROFILE MODAL ===================== */
+// Tracks what to do with the photo on save:
+// null = no change | 'remove' = delete it | File object = upload new one
+let pendingPhotoAction = null;
+
+function openProfileModal() {
+    pendingPhotoAction = null;
+
+    // Reset photo preview to what's currently in the DB
+    const preview    = document.getElementById('modalPhotoPreview');
+    const existingUrl = "{% if request.user.profile.profile_photo %}{{ request.user.profile.profile_photo.url }}{% endif %}";
+    if (existingUrl) {
+        preview.innerHTML = `<img src="${existingUrl}" alt="Profile photo">`;
+        document.getElementById('removePhotoBtn').disabled = false;
+    } else {
+        preview.innerHTML = `<span>{{ request.user.username|first|upper }}</span>`;
+        document.getElementById('removePhotoBtn').disabled = true;
+    }
+
+    document.getElementById('profileModal').classList.add('open');
+    setTimeout(() => document.getElementById('displayNameInput').focus(), 200);
+}
+
+function closeProfileModal() {
+    document.getElementById('profileModal').classList.remove('open');
+    pendingPhotoAction = null;
+    document.getElementById('photoInput').value = '';
+}
+
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('profileModal')) closeProfileModal();
+}
+
+function handlePhotoSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('Invalid file', 'Please select an image.'); return; }
+    if (file.size > 5 * 1024 * 1024)    { showToast('File too large', 'Max size is 5 MB.'); return; }
+
+    pendingPhotoAction = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('modalPhotoPreview').innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+        document.getElementById('removePhotoBtn').disabled = false;
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+}
+
+function removePhoto() {
+    pendingPhotoAction = 'remove';
+    document.getElementById('modalPhotoPreview').innerHTML = `<span>{{ request.user.username|first|upper }}</span>`;
+    document.getElementById('removePhotoBtn').disabled = true;
+}
+
+/* ===================== SAVE PROFILE — POSTS TO DJANGO ===================== */
+async function saveProfile() {
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner"></span> Saving…';
+
+    try {
+        // Step 1: if remove was requested, send that first
+        if (pendingPhotoAction === 'remove') {
+            const fd = new FormData();
+            fd.append('action', 'remove');
+            const res = await fetch('/profile/update/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': CSRF },
+                body: fd,
+            });
+            const data = await res.json();
+            if (!res.ok) { showToast('Error', data.message || 'Could not remove photo.'); return; }
+        }
+
+        // Step 2: save display name + optional new photo
+        const fd2 = new FormData();
+        fd2.append('action', 'save');
+        fd2.append('display_name', document.getElementById('displayNameInput').value.trim());
+        if (pendingPhotoAction instanceof File) {
+            fd2.append('profile_photo', pendingPhotoAction);
+        }
+
+        const res2  = await fetch('/profile/update/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF },
+            body: fd2,
+        });
+        const data2 = await res2.json();
+        if (!res2.ok) { showToast('Error', data2.message || 'Could not save profile.'); return; }
+
+        // The WebSocket broadcast from the server will call applyProfileUpdate()
+        // automatically for everyone including this tab, but we also update
+        // our own sidebar immediately from the JSON response so it feels instant.
+        applyProfileUpdate(
+            '{{ request.user.username }}',
+            data2.display_name,
+            data2.photo_url
+        );
+
+        closeProfileModal();
+        showToast('Profile updated', 'Your changes are now visible to everyone.', true);
+
+    } catch (err) {
+        showToast('Network error', 'Please try again.');
+        console.error(err);
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = 'Save Changes';
+    }
+}
+
+/* ===================== APPLY PROFILE UPDATE =====================
+   Called both from saveProfile() (instant local update) and from
+   the WebSocket profile_update event (real-time update for everyone).
+   Updates every place on the page where this user appears.
+================================================================= */
+function avatarHTML(photoUrl, initial) {
+    if (photoUrl) {
+        return `<img src="${photoUrl}" alt="${escapeHTML(initial)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    }
+    return escapeHTML(initial);
+}
+
+function applyProfileUpdate(username, displayName, photoUrl) {
+    const initial = username.charAt(0).toUpperCase();
+    const isMe    = (username === '{{ request.user.username }}');
+
+    // 1. Sidebar contact list — each card has data-username attribute
+    document.querySelectorAll('.user-card[data-username="' + username + '"]').forEach(card => {
+        const nameEl   = card.querySelector('.uname');
+        const avatarEl = card.querySelector('.avatar');
+        if (nameEl)   nameEl.textContent  = displayName;
+        if (avatarEl) avatarEl.innerHTML  = avatarHTML(photoUrl, initial);
+    });
+
+    // 2. My profile row in sidebar footer (only when it's the logged-in user)
+    if (isMe) {
+        const nameEl   = document.getElementById('sidebarDisplayName');
+        const avatarEl = document.getElementById('sidebarAvatar');
+        if (nameEl)   nameEl.textContent = displayName;
+        if (avatarEl) avatarEl.innerHTML = avatarHTML(photoUrl, initial);
+    }
+
+    // 3. Chat header (only if this is the person we're chatting with)
+    const chatWith = '{{ chat_user.username|default:"" }}';
+    if (username === chatWith) {
+        const headerName   = document.getElementById('chatHeaderName');
+        const headerAvatar = document.getElementById('chatHeaderAvatar');
+        if (headerName) headerName.textContent = displayName;
+        if (headerAvatar) {
+            const dot = headerAvatar.querySelector('.online-dot');
+            headerAvatar.innerHTML = avatarHTML(photoUrl, initial);
+            if (dot) headerAvatar.appendChild(dot);
+        }
+    }
+
+    // 4. All existing message bubbles in the thread
+    document.querySelectorAll('.msg-row[data-sender="' + username + '"]').forEach(row => {
+        const avatarEl = row.querySelector('.msg-avatar');
+        const nameEl   = row.querySelector('.sender-name');
+        if (avatarEl) avatarEl.innerHTML = avatarHTML(photoUrl, initial);
+        // Only update sender label for other users (your own shows "You")
+        if (nameEl && !isMe) nameEl.textContent = displayName;
+    });
+}
+
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeProfileModal(); });
+
+/* ===================== WEBSOCKET ===================== */
+const room        = '{{ chat_user.username|default:"" }}';
+const currentUser = '{{ request.user.username }}';
+const statusDot   = document.getElementById('statusDot');
+const statusText  = document.getElementById('statusText');
+
+if (room.trim()) {
+    const wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socket = new WebSocket(wsProtocol + location.host + '/ws/chat/' + room + '/');
+
+    socket.onopen  = () => {
+        statusDot?.classList.add('connected');
+        if (statusText) statusText.textContent = 'Online · End-to-end encrypted';
+    };
+    socket.onerror = () => {
+        statusDot?.classList.add('error');
+        if (statusText) statusText.textContent = 'Connection error';
+    };
+    socket.onclose = () => {
+        statusDot?.classList.add('error');
+        if (statusText) statusText.textContent = 'Disconnected';
+    };
+
+    socket.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+
+        // Typing indicator
+        if (data.type === 'typing' && data.sender !== currentUser) {
+            const tb = document.getElementById('typingBubble');
+            tb.classList.add('visible');
+            clearTimeout(window.typingTimer);
+            window.typingTimer = setTimeout(() => tb.classList.remove('visible'), 1200);
+            return;
+        }
+
+        // Profile update — patch every mention of this user on the page
+        if (data.type === 'profile_update') {
+            applyProfileUpdate(data.username, data.display_name, data.photo_url);
+            return;
+        }
+
+        // Chat message
+        if (data.type === 'chat_message' || data.message) {
+            const isMe = data.sender === currentUser;
+            const row  = document.createElement('div');
+            row.className = 'msg-row ' + (isMe ? 'sent' : 'received');
+            row.setAttribute('data-sender', data.sender);
+
+            // Use the live avatar/name from the page if available
+            const senderCard = document.querySelector('.user-card[data-username="' + data.sender + '"]');
+            const senderName = isMe ? 'You' : (senderCard?.querySelector('.uname')?.textContent || data.sender);
+            const senderAvatar = isMe
+                ? document.getElementById('sidebarAvatar')?.innerHTML
+                : senderCard?.querySelector('.avatar')?.innerHTML;
+
+            row.innerHTML = `
+                ${!isMe ? `<div class="msg-avatar">${senderAvatar || data.sender.charAt(0).toUpperCase()}</div>` : ''}
+                <div class="bubble-group">
+                    <span class="sender-name">${escapeHTML(senderName)}</span>
+                    <div class="bubble">${escapeHTML(data.message)}</div>
+                    <span class="meta">now</span>
+                </div>
+                ${isMe ? `<div class="msg-avatar">${document.getElementById('sidebarAvatar')?.innerHTML || currentUser.charAt(0).toUpperCase()}</div>` : ''}
+            `;
+            box.appendChild(row);
+            box.scrollTop = box.scrollHeight;
+        }
+    };
+
+    document.getElementById('chat-input')?.addEventListener('input', () => {
+        if (socket.readyState === WebSocket.OPEN)
+            socket.send(JSON.stringify({ type: 'typing' }));
+    });
+
+    document.getElementById('chat-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const msg   = input.value.trim();
+        if (!msg) return;
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ message: msg }));
+            input.value = '';
+        } else {
+            showToast('Not connected', 'Waiting for connection…');
+        }
+    });
+}
+
+// OPEN MODAL
+function openUserSearch() {
+    document.getElementById("userSearchModal").style.display = "block";
+}
+
+// CLOSE WHEN CLICK OUTSIDE
+document.getElementById("userSearchModal").addEventListener("click", function(e) {
+    if (e.target === this) {
+        this.style.display = "none";
+    }
+});
+
+// SEARCH USERS
+document.getElementById("searchUserInput").addEventListener("input", async function () {
+    const query = this.value;
+
+    if (!query) {
+        document.getElementById("searchResults").innerHTML = "";
+        return;
+    }
+
+    const res = await fetch(`/search-users/?q=${query}`);
+    const data = await res.json();
+
+    let html = "";
+    data.users.forEach(user => {
+        html += `
+            <div style="padding:10px; cursor:pointer;" onclick="startChat('${user.username}')">
+                ${user.username}
+            </div>
+        `;
+    });
+
+    document.getElementById("searchResults").innerHTML = html;
+});
+
+// START CHAT
+function startChat(username) {
+    window.location.href = `/chat/${username}/`;
+}
+</script>
+</body>
+</html>

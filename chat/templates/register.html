@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Avenza | Create Account</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:          #dde8f5;
+            --card:        rgba(255, 255, 255, 0.72);
+            --card-border: rgba(255, 255, 255, 0.95);
+            --text:        #2c3a52;
+            --text-dim:    #8a9bba;
+            --text-muted:  #b8c8df;
+            --accent:      #4a9fff;
+            --accent-dark: #2e7de0;
+            --accent-glow: rgba(74, 159, 255, 0.28);
+            --shadow-lg:   0 20px 60px rgba(60, 100, 180, 0.18);
+            --neu-out:     8px 8px 20px rgba(80, 120, 200, 0.15), -4px -4px 14px rgba(255, 255, 255, 0.9);
+            --error:       #e05555;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Matching the Chat App's animated background gradient */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 60% at 10% 20%, rgba(200,225,255,0.55) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 70% at 90% 80%, rgba(180,215,255,0.4) 0%, transparent 60%);
+            z-index: -1;
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 440px;
+            padding: 40px;
+            background: var(--card);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1.5px solid var(--card-border);
+            border-radius: 32px;
+            box-shadow: var(--shadow-lg), var(--neu-out);
+            position: relative;
+            animation: containerIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes containerIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .brand-section { text-align: center; margin-bottom: 35px; }
+        
+        .brand-name { 
+            font-size: 32px; 
+            font-weight: 800; 
+            letter-spacing: -1px; 
+            color: var(--text);
+            animation: fadeInDown 0.6s ease both 0.2s;
+        }
+        .brand-name span { color: var(--accent); }
+
+        .brand-sub { 
+            font-size: 12px; 
+            color: var(--text-dim); 
+            font-weight: 600; 
+            letter-spacing: 1.5px; 
+            text-transform: uppercase; 
+            margin-top: 4px;
+            animation: fadeInDown 0.6s ease both 0.3s;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form Styling */
+        form { display: flex; flex-direction: column; gap: 20px; }
+
+        .input-group { position: relative; }
+
+        .input-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            margin-left: 4px;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1.5px solid rgba(180, 200, 230, 0.3);
+            border-radius: 16px;
+            padding: 14px 18px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            outline: none;
+            transition: all 0.25s;
+            box-shadow: inset 0 1px 3px rgba(180, 200, 230, 0.1);
+        }
+
+        input::placeholder { color: var(--text-muted); font-weight: 400; }
+
+        input:focus {
+            background: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(74, 159, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .error-msg {
+            background: rgba(224, 85, 85, 0.08);
+            border: 1px solid rgba(224, 85, 85, 0.2);
+            color: var(--error);
+            padding: 12px 16px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .submit-btn {
+            background: var(--accent);
+            background: linear-gradient(135deg, #4a9fff 0%, #2e7de0 100%);
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            color: #fff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 24px var(--accent-glow);
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(74, 159, 255, 0.4);
+        }
+
+        .submit-btn:active { transform: scale(0.97) translateY(0); }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-dim);
+        }
+
+        .footer a {
+            color: var(--accent-dark);
+            text-decoration: none;
+            font-weight: 700;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover { color: var(--accent); text-decoration: underline; }
+
+        /* Icon styling */
+        .input-icon {
+            position: absolute;
+            right: 18px;
+            top: 42px;
+            color: var(--text-muted);
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+    <div class="brand-section">
+        <h1 class="brand-name">Aven<span>za</span></h1>
+        <p class="brand-sub">Create your account</p>
+    </div>
+
+    {% if error %}
+        <div class="error-msg">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="input-group">
+            <label class="input-label" for="display_name">Display Name</label>
+            <input type="text" id="display_name" name="display_name" placeholder="How should you appear?" required autocomplete="off">
+            <div class="input-icon">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                    <path d="M12 11l2 2-2 2" stroke-width="1.5"></path>
+                </svg>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label class="input-label" for="username">Username (ID)</label>
+            <input type="text" id="username" name="username" placeholder="@unique_id" required autocomplete="off">
+            <div class="input-icon">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
+                </svg>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label class="input-label" for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="At least 8 characters" required>
+            <div class="input-icon">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Get Started</button>
+    </form>
+
+    <div class="footer">
+        Already have an account? <a href="/login/">Sign In</a>
+    </div>
+</div>
+
+</body>
+</html>
