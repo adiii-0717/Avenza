@@ -1,0 +1,7 @@
+Django
+channels
+daphne
+gunicorn
+uvicorn
+whitenoise
+Pillow
